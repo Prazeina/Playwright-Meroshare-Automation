@@ -80,23 +80,6 @@ Automation project for MeroShare website (https://meroshare.cdsc.com.np) using P
   npm run test:ui
   ```
 
-### MeroShare Specific Commands
-
-- **Run login test:**
-  ```bash
-  npx playwright test tests/meroshare/login.spec.js --project=chromium --headed
-  ```
-
-- **Run specific test:**
-  ```bash
-  npx playwright test tests/meroshare/login.spec.js -g "should login and click on My ASBA" --project=chromium --headed
-  ```
-
-- **Run in debug mode:**
-  ```bash
-  npx playwright test tests/meroshare/login.spec.js --debug
-  ```
-
 ### Automation Scripts
 
 - **Run automation once (check for IPO and apply if found):**
@@ -129,7 +112,7 @@ Automation project for MeroShare website (https://meroshare.cdsc.com.np) using P
 ├── scripts/
 │   └── scheduler.js           # Daily scheduler script
 ├── playwright.config.js        # Playwright configuration
-├── .env                        # Environment variables (not committed)
+├── .env                        # Environment variables
 └── package.json                # Project dependencies
 ```
 
