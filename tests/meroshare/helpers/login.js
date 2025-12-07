@@ -1,34 +1,8 @@
 /**
- * Helper functions for MeroShare automation
+ * Login-related helper functions for MeroShare automation
  */
 
-/**
- * Wait for page to be ready using element-based waits instead of networkidle
- * This is more reliable than waiting for networkidle which can timeout
- * @param {import('@playwright/test').Page} page - Playwright page object
- * @param {string|string[]} selectors - CSS selector(s) to wait for
- * @param {number} timeout - Timeout in milliseconds (default: 10000)
- */
-async function waitForPageReady(page, selectors, timeout = 10000) {
-  const selectorArray = Array.isArray(selectors) ? selectors : [selectors];
-  
-  for (const selector of selectorArray) {
-    try {
-      await page.waitForSelector(selector, { timeout });
-      return; // Successfully found element
-    } catch (e) {
-      continue; // Try next selector
-    }
-  }
-  
-  // If all selectors failed, wait for basic page load as fallback
-  try {
-    await page.waitForLoadState('load', { timeout: 5000 });
-  } catch (e) {
-    // Last resort: just wait a short time
-    await page.waitForTimeout(1000);
-  }
-}
+const { waitForPageReady } = require('./common');
 
 /**
  * Select Depository Participant (DP) from dropdown
@@ -99,7 +73,6 @@ async function selectDP(page, dpName) {
   
   // If Select2 didn't work, try native select
   if (!dpSelected) {
-    // Common selectors for DP dropdown
     const dpSelectors = [
       'select#selectBranch',
       'select[name*="dp" i]',
@@ -114,17 +87,14 @@ async function selectDP(page, dpName) {
       try {
         const dropdown = page.locator(selector).first();
         if (await dropdown.isVisible({ timeout: 2000 })) {
-          // Try select option by text
           try {
             await dropdown.selectOption({ label: dpName });
             dpSelected = true;
             console.log(`Selected DP "${dpName}" using selector: ${selector}`);
             break;
           } catch (e) {
-            // If selectOption doesn't work, try clicking and selecting
             await dropdown.click();
             await page.waitForTimeout(500);
-            // Try to find option in dropdown
             const option = page.locator(`option:has-text("${dpName}")`).first();
             if (await option.isVisible({ timeout: 1000 })) {
               await option.click();
@@ -141,7 +111,6 @@ async function selectDP(page, dpName) {
   
   // If it's a custom dropdown (not native select), try different approach
   if (!dpSelected) {
-    // Try clicking on dropdown and then selecting from list
     const customDropdownSelectors = [
       'ng-select',
       'ng-select .ng-select-container',
@@ -151,7 +120,6 @@ async function selectDP(page, dpName) {
       '[aria-haspopup="listbox"]',
       'div[class*="ng-select"]',
       'div[class*="form-control"][class*="select"]',
-      // Try finding by text "Select your DP" or similar
       'div:has-text("Select your DP")',
       'div:has-text("Select DP")',
       'label:has-text("DP") + *',
@@ -166,10 +134,6 @@ async function selectDP(page, dpName) {
           await dropdown.click();
           await page.waitForTimeout(1000);
           
-          // Wait for dropdown options to appear
-          await page.waitForTimeout(500);
-          
-          // Look for the option in the dropdown list
           const optionSelectors = [
             `text="${dpName}"`,
             `text=/.*${dpName}.*/i`,
@@ -227,8 +191,6 @@ async function fillLoginForm(page, { username, password }) {
   ], 10000);
   await page.waitForTimeout(500);
   
-  // Common selectors for MeroShare login form
-  // Based on actual page inspection: input#username and input#password
   const usernameSelectors = [
     'input#username',
     'input[name="username"]',
@@ -347,108 +309,10 @@ async function performLogin(page, { username, password, dp }) {
   await page.waitForTimeout(2000);
 }
 
-/**
- * Check if login was successful
- * @param {import('@playwright/test').Page} page - Playwright page object
- * @returns {Promise<boolean>} - True if login appears successful
- */
-async function isLoginSuccessful(page) {
-  // Check if URL changed (not on login page anymore)
-  const currentUrl = page.url();
-  if (!currentUrl.includes('login')) {
-    return true;
-  }
-  
-  // Check for error messages
-  const errorSelectors = [
-    '.error',
-    '.alert-danger',
-    '.alert-error',
-    '[role="alert"]',
-    '.invalid-feedback',
-  ];
-  
-  for (const selector of errorSelectors) {
-    const error = page.locator(selector).first();
-    if (await error.isVisible({ timeout: 1000 })) {
-      const errorText = await error.textContent();
-      console.log('Login error:', errorText);
-      return false;
-    }
-  }
-  
-  // If still on login page, assume failed
-  return !currentUrl.includes('login');
-}
-
-/**
- * Click on "My ASBA" link/button after login
- * @param {import('@playwright/test').Page} page - Playwright page object
- */
-async function clickMyASBA(page) {
-  // Wait for "My ASBA" link to be visible instead of networkidle
-  try {
-    await page.waitForSelector('a:has-text("My ASBA"), *:has-text("My ASBA")', { timeout: 15000 });
-  } catch (e) {
-    // Fallback: wait for navigation to complete (URL changed from login)
-    try {
-      await page.waitForFunction(
-        () => !window.location.href.includes('login'),
-        { timeout: 10000 }
-      );
-    } catch (e2) {
-      // Last resort: use our helper function
-      await waitForPageReady(page, ['body'], 5000);
-    }
-  }
-  await page.waitForTimeout(1000);
-  
-  // Common selectors for "My ASBA" link/button
-  const myASBASelectors = [
-    'a:has-text("My ASBA")',
-    'button:has-text("My ASBA")',
-    'a[href*="asba" i]',
-    'a[href*="ASBA" i]',
-    '*:has-text("My ASBA")',
-    'li:has-text("My ASBA")',
-    'nav a:has-text("My ASBA")',
-    'menu a:has-text("My ASBA")',
-    // Try by exact text match
-    'text=My ASBA',
-    'text=/My ASBA/i',
-  ];
-  
-  let clicked = false;
-  
-  for (const selector of myASBASelectors) {
-    try {
-      const element = page.locator(selector).first();
-      if (await element.isVisible({ timeout: 3000 })) {
-        await element.click();
-        clicked = true;
-        console.log(`Clicked "My ASBA" using selector: ${selector}`);
-        // Wait for navigation or page update
-        await page.waitForTimeout(2000);
-        break;
-      }
-    } catch (e) {
-      continue;
-    }
-  }
-  
-  if (!clicked) {
-    throw new Error('Could not find "My ASBA" link/button');
-  }
-  
-  return clicked;
-}
-
 module.exports = {
   selectDP,
   fillLoginForm,
   clickLoginButton,
   performLogin,
-  isLoginSuccessful,
-  clickMyASBA,
 };
 

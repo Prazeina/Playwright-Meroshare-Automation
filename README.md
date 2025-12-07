@@ -1,6 +1,6 @@
-# Playwright Automation Project
+# MeroShare Automation with Playwright
 
-This project uses Playwright to automate website interactions and testing.
+Automation project for MeroShare website (https://meroshare.cdsc.com.np) using Playwright.
 
 ## Setup
 
@@ -11,27 +11,36 @@ This project uses Playwright to automate website interactions and testing.
 
 2. **Install Playwright browsers:**
    ```bash
-   npx playwright install
+   npx playwright install chromium
+   ```
+
+3. **Create `.env` file** in the project root:
+   ```bash
+   MEROSHARE_USERNAME=your_username
+   MEROSHARE_PASSWORD=your_password
+   MEROSHARE_DP_NP=Nepal Bank Limited
    ```
 
 ## Running Tests
+
+### Basic Commands
 
 - **Run all tests:**
   ```bash
   npm test
   ```
 
-- **Run tests in headed mode (see browser):**
+- **Run with browser visible:**
   ```bash
   npm run test:headed
   ```
 
-- **Run tests in debug mode:**
+- **Run in debug mode:**
   ```bash
   npm run test:debug
   ```
 
-- **Run tests with UI mode:**
+- **Run in UI mode (interactive):**
   ```bash
   npm run test:ui
   ```
@@ -41,82 +50,85 @@ This project uses Playwright to automate website interactions and testing.
   npm run test:report
   ```
 
+### MeroShare Specific Commands
+
+- **Run login test:**
+  ```bash
+  npx playwright test tests/meroshare/login.spec.js --project=chromium --headed
+  ```
+
+- **Run specific test:**
+  ```bash
+  npx playwright test tests/meroshare/login.spec.js -g "should login and click on My ASBA" --project=chromium --headed
+  ```
+
+- **Run in debug mode:**
+  ```bash
+  npx playwright test tests/meroshare/login.spec.js --debug
+  ```
+
 ## Project Structure
 
 ```
 .
-├── tests/              # Test files
-│   └── example.spec.js # Example test file
-├── playwright.config.js # Playwright configuration
-└── package.json        # Project dependencies
+├── tests/
+│   └── meroshare/
+│       ├── login.spec.js       # Login automation tests
+│       └── helpers/            # Helper functions
+│           ├── index.js        # Central export point
+│           ├── common.js       # Common utilities
+│           ├── login.js        # Login-related helpers
+│           └── navigation.js   # Navigation helpers
+├── playwright.config.js        # Playwright configuration
+├── .env                        # Environment variables (not committed)
+└── package.json                # Project dependencies
 ```
 
-## Common Playwright Commands
+## Helper Functions
 
-### Navigation
-```javascript
-await page.goto('https://example.com');
-await page.goBack();
-await page.goForward();
-await page.reload();
-```
+Helper functions are organized by feature in `tests/meroshare/helpers/`:
 
-### Finding Elements
-```javascript
-// By CSS selector
-await page.locator('button').click();
-await page.locator('#id').fill('text');
-await page.locator('.class').click();
+**Common Utilities** (`helpers/common.js`):
+- `waitForPageReady(page, selectors, timeout)` - Waits for page elements (reliable alternative to networkidle)
+- `isLoginSuccessful(page)` - Checks if login was successful
 
-// By text
-await page.locator('text=Click me').click();
-await page.getByText('Click me').click();
+**Login Helpers** (`helpers/login.js`):
+- `selectDP(page, dpName)` - Selects a Depository Participant from the dropdown
+- `fillLoginForm(page, { username, password })` - Fills the login form
+- `clickLoginButton(page)` - Clicks the login button
+- `performLogin(page, { username, password, dp })` - Complete login flow
 
-// By role
-await page.getByRole('button', { name: 'Submit' }).click();
-await page.getByLabel('Email').fill('test@example.com');
-```
+**Navigation Helpers** (`helpers/navigation.js`):
+- `clickMyASBA(page)` - Clicks on "My ASBA" link after login
 
-### Interactions
-```javascript
-await page.click('button');
-await page.fill('input', 'text');
-await page.type('input', 'text', { delay: 100 });
-await page.selectOption('select', 'value');
-await page.check('checkbox');
-await page.hover('element');
-```
+All helpers are exported through `helpers/index.js` for easy importing.
 
-### Waiting
-```javascript
-await page.waitForSelector('h1');
-await page.waitForLoadState('networkidle');
-await page.waitForURL('**/dashboard');
-await page.waitForTimeout(1000); // milliseconds
-```
+## Features
 
-### Assertions
-```javascript
-await expect(page).toHaveTitle('Page Title');
-await expect(page.locator('h1')).toHaveText('Heading');
-await expect(page.locator('button')).toBeVisible();
-await expect(page.locator('input')).toHaveValue('text');
-```
+- ✅ Automated login with credentials from `.env` file
+- ✅ Select2 dropdown handling for DP selection
+- ✅ Element-based waits (more reliable than networkidle)
+- ✅ Graceful timeout handling with fallback strategies
+- ✅ Navigation to My ASBA page after login
+
+## Best Practices
+
+- **Element-based waits**: Instead of waiting for `networkidle`, we wait for specific elements to appear
+- **Try-catch with fallbacks**: Multiple fallback strategies if primary selectors fail
+- **Environment variables**: Credentials stored securely in `.env` file (not committed to git)
+- **Reusable helpers**: Common functionality extracted into helper functions organized by feature
 
 ## Configuration
 
 Edit `playwright.config.js` to customize:
 - Test directory
 - Browsers to test against
-- Timeouts
+- Timeouts (default: 60 seconds)
 - Screenshots and videos
 - Base URL
-- And more...
 
 ## Resources
 
 - [Playwright Documentation](https://playwright.dev)
 - [Playwright API Reference](https://playwright.dev/docs/api/class-playwright)
 - [Best Practices](https://playwright.dev/docs/best-practices)
-
-# Playwright-Meroshare-Automation
