@@ -8,7 +8,10 @@
     "test:headed": "playwright test --headed",
     "test:debug": "playwright test --debug",
     "test:ui": "playwright test --ui",
-    "test:report": "playwright show-report"
+    "test:report": "playwright show-report",
+    "automate": "playwright test tests/meroshare/login.spec.js",
+    "automate:headed": "playwright test tests/meroshare/login.spec.js --headed",
+    "schedule": "node scripts/scheduler.js"
   },
   "keywords": [
     "playwright",
@@ -20,6 +23,10 @@
   "devDependencies": {
     "@playwright/test": "^1.40.0",
     "dotenv": "^16.3.1"
+  },
+  "dependencies": {
+    "node-cron": "^3.0.3",
+    "node-telegram-bot-api": "^0.64.0",
+    "playwright": "^1.57.0"
   }
 }
-
