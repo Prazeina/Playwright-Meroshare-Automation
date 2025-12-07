@@ -18,8 +18,48 @@ Automation project for MeroShare website (https://meroshare.cdsc.com.np) using P
    ```bash
    MEROSHARE_USERNAME=your_username
    MEROSHARE_PASSWORD=your_password
-   MEROSHARE_DP_NP=Nepal Bank Limited
+   MEROSHARE_DP_NP=bank_name
+   
+   # Telegram Bot (optional, for notifications)
+   TELEGRAM_BOT_TOKEN=your_telegram_bot_token
+   TELEGRAM_CHAT_ID=your_telegram_chat_id
+   
+   # IPO Application Settings (optional)
+   IPO_QUANTITY=10
+   IPO_CRN=your_crn_number
+   IPO_PIN=your_pin_number
+   
+   # Scheduler Settings (optional)
+   SCHEDULE_TIME=0 9 * * *  # 9:00 AM daily (cron format)
+   RUN_ON_START=true         # Run immediately on scheduler start
    ```
+
+4. **Setup Telegram Bot (optional):**
+   - Create a bot by messaging [@BotFather](https://t.me/botfather) on Telegram
+   - Get your bot token
+   - Get your chat ID by messaging [@userinfobot](https://t.me/userinfobot)
+   - **Alternative: Get Chat ID programmatically:**
+     ```python
+     import requests
+     import json
+     
+     your_token = "XYZ"
+     # Let's get your chat id! Be sure to have sent a message to your bot.
+     url = 'https://api.telegram.org/bot'+str(your_token)+'/getUpdates'
+     response = requests.get(url)
+     myinfo = response.json()
+     if response.status_code == 401:
+       raise NameError('Check if your token is correct.')
+     
+     try:
+       CHAT_ID: int = myinfo['result'][1]['message']['chat']['id']
+     
+       print('This is your Chat ID:', CHAT_ID)
+     
+     except:
+       print('Have you sent a message to your bot? Telegram bot are quite shy 🤣.')
+     ```
+   - Add both to your `.env` file
 
 ## Running Tests
 
@@ -35,37 +75,24 @@ Automation project for MeroShare website (https://meroshare.cdsc.com.np) using P
   npm run test:headed
   ```
 
-- **Run in debug mode:**
-  ```bash
-  npm run test:debug
-  ```
-
 - **Run in UI mode (interactive):**
   ```bash
   npm run test:ui
   ```
 
-- **View test report:**
+### Automation Scripts
+
+- **Run automation once (check for IPO and apply if found):**
   ```bash
-  npm run test:report
+  npm run automate
   ```
 
-### MeroShare Specific Commands
-
-- **Run login test:**
+- **Start daily scheduler:**
   ```bash
-  npx playwright test tests/meroshare/login.spec.js --project=chromium --headed
+  npm run schedule
   ```
-
-- **Run specific test:**
-  ```bash
-  npx playwright test tests/meroshare/login.spec.js -g "should login and click on My ASBA" --project=chromium --headed
-  ```
-
-- **Run in debug mode:**
-  ```bash
-  npx playwright test tests/meroshare/login.spec.js --debug
-  ```
+  
+  The scheduler will run the automation daily at the time specified in `SCHEDULE_TIME` (default: 9:00 AM).
 
 ## Project Structure
 
@@ -73,14 +100,19 @@ Automation project for MeroShare website (https://meroshare.cdsc.com.np) using P
 .
 ├── tests/
 │   └── meroshare/
-│       ├── login.spec.js       # Login automation tests
+│       ├── login.spec.js       # Login -  MyAsba automation tests
 │       └── helpers/            # Helper functions
 │           ├── index.js        # Central export point
 │           ├── common.js       # Common utilities
 │           ├── login.js        # Login-related helpers
-│           └── navigation.js   # Navigation helpers
+│           ├── navigation.js  # Navigation helpers
+│           ├── asba.js         # ASBA page helpers
+│           ├── ipo.js          # IPO application helpers
+│           └── telegram.js    # Telegram notification helpers
+├── scripts/
+│   └── scheduler.js           # Daily scheduler script
 ├── playwright.config.js        # Playwright configuration
-├── .env                        # Environment variables (not committed)
+├── .env                        # Environment variables
 └── package.json                # Project dependencies
 ```
 
@@ -101,6 +133,23 @@ Helper functions are organized by feature in `tests/meroshare/helpers/`:
 **Navigation Helpers** (`helpers/navigation.js`):
 - `clickMyASBA(page)` - Clicks on "My ASBA" link after login
 
+**ASBA Helpers** (`helpers/asba.js`):
+- `checkForApplyButton(page)` - Checks if Apply button exists on My ASBA page
+- `getIPODetails(page)` - Extracts IPO details from ASBA page
+- `clickApplyButton(page, applyInfo)` - Clicks the Apply button
+
+**IPO Helpers** (`helpers/ipo.js`):
+- `fillIPOApplication(page, applicationData)` - Fills IPO application form
+- `submitIPOApplication(page)` - Submits the IPO application
+- `checkApplicationStatus(page)` - Checks if application was successful
+
+**Telegram Helpers** (`helpers/telegram.js`):
+- `initBot(token)` - Initializes Telegram bot
+- `notifyIPOAvailable(chatId, ipoName)` - Sends IPO availability notification
+- `notifyIPOStatus(chatId, status, details)` - Sends application status notification
+- `notifyError(chatId, error)` - Sends error notification
+- `notifyDailyCheck(chatId, applyFound)` - Sends daily check notification
+
 All helpers are exported through `helpers/index.js` for easy importing.
 
 ## Features
@@ -110,13 +159,10 @@ All helpers are exported through `helpers/index.js` for easy importing.
 - ✅ Element-based waits (more reliable than networkidle)
 - ✅ Graceful timeout handling with fallback strategies
 - ✅ Navigation to My ASBA page after login
-
-## Best Practices
-
-- **Element-based waits**: Instead of waiting for `networkidle`, we wait for specific elements to appear
-- **Try-catch with fallbacks**: Multiple fallback strategies if primary selectors fail
-- **Environment variables**: Credentials stored securely in `.env` file (not committed to git)
-- **Reusable helpers**: Common functionality extracted into helper functions organized by feature
+- ✅ **Telegram notifications** for IPO availability and application status
+- ✅ **Daily automated checks** for IPO availability
+- ✅ WIP: **Automatic IPO application** when Apply button is found
+- ✅ **Scheduled execution** using cron jobs
 
 ## Configuration
 
