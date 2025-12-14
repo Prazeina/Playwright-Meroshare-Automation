@@ -70,6 +70,7 @@ test.describe('MeroShare IPO Automation', () => {
     
     // Perform login with DP selection
     try {
+      console.log(`Attempting login with DP: ${dp || 'not specified'}`);
       await performLogin(page, { username, password, dp });
       
       // Wait for navigation after login
@@ -78,7 +79,29 @@ test.describe('MeroShare IPO Automation', () => {
       // Check if login was successful
       const success = await isLoginSuccessful(page);
       if (!success) {
-        throw new Error('Login failed');
+        // Get more context about why login failed
+        const currentUrl = page.url();
+        const pageTitle = await page.title();
+        const pageContent = await page.content();
+        
+        // Check for common error messages
+        let errorMessage = 'Login failed';
+        const errorText = await page.locator('.error, .alert-danger, [role="alert"]').first().textContent().catch(() => null);
+        if (errorText) {
+          errorMessage = `Login failed: ${errorText.trim()}`;
+        }
+        
+        console.error('Login failure details:');
+        console.error('- URL:', currentUrl);
+        console.error('- Page title:', pageTitle);
+        if (errorText) {
+          console.error('- Error message:', errorText);
+        }
+        
+        // Take screenshot for debugging
+        await page.screenshot({ path: 'test-results/login-failure.png', fullPage: true });
+        
+        throw new Error(errorMessage);
       }
       
       console.log('Login successful! Now clicking on My ASBA...');
