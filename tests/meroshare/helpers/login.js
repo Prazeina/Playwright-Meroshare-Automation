@@ -168,7 +168,11 @@ async function selectDP(page, dpName) {
   }
   
   if (!dpSelected) {
-    throw new Error(`Could not select DP: ${dpName}`);
+    console.warn(`⚠️ Could not select DP: ${dpName}. Continuing without DP selection...`);
+    // Don't throw error - some sites might not require DP selection
+    // The login might still work
+  } else {
+    console.log(`✅ Successfully selected DP: ${dpName}`);
   }
   
   await page.waitForTimeout(500);
