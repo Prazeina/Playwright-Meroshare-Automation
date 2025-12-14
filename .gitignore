@@ -1,0 +1,16 @@
+# Dependencies
+node_modules/
+
+# Environment variables
+.env
+
+# Playwright
+playwright-report/
+test-results/
+*.png
+*.jpg
+*.mp4
+
+# OS
+.DS_Store
+

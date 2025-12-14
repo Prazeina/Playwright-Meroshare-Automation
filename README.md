@@ -28,10 +28,6 @@ Automation project for MeroShare website (https://meroshare.cdsc.com.np) using P
    IPO_QUANTITY=10
    IPO_CRN=your_crn_number
    IPO_PIN=your_pin_number
-   
-   # Scheduler Settings (optional)
-   SCHEDULE_TIME=0 9 * * *  # 9:00 AM daily (cron format)
-   RUN_ON_START=true         # Run immediately on scheduler start
    ```
 
 4. **Setup Telegram Bot (optional):**
@@ -87,12 +83,40 @@ Automation project for MeroShare website (https://meroshare.cdsc.com.np) using P
   npm run automate
   ```
 
-- **Start daily scheduler:**
-  ```bash
-  npm run schedule
-  ```
-  
-  The scheduler will run the automation daily at the time specified in `SCHEDULE_TIME` (default: 9:00 AM).
+### GitHub Actions Automation
+
+The project includes a GitHub Actions workflow (`.github/workflows/meroshare-automation.yml`) that runs the automation automatically:
+
+- **Scheduled execution:** Runs daily at 9:00 AM Nepal Time (3:15 AM UTC)
+- **Manual trigger:** Can be triggered manually from the GitHub Actions tab
+- **No local machine required:** Runs on GitHub's servers
+- **Secure:** Uses GitHub Secrets for credentials
+
+**Setup GitHub Actions:**
+
+1. **Add secrets to your GitHub repository:**
+   - Go to: **Settings** → **Secrets and variables** → **Actions** → **New repository secret**
+   - Add these secrets:
+     - `MEROSHARE_USERNAME`
+     - `MEROSHARE_PASSWORD`
+     - `MEROSHARE_DP_NP` 
+     - `TELEGRAM_BOT_TOKEN` 
+     - `TELEGRAM_CHAT_ID` 
+     - `IPO_QUANTITY` (optional)
+     - `IPO_PIN` (optional)
+
+2. **Push the workflow file** (already included in the project)
+
+3. **Monitor runs:**
+   - Go to the **Actions** tab in your GitHub repository
+   - View workflow runs and logs
+   - Download artifacts (screenshots/reports) on failure
+
+**Benefits:**
+- ✅ Runs automatically without keeping your computer on
+- ✅ Free tier friendly (optimized for GitHub Actions free tier)
+- ✅ Reliable cloud execution
+- ✅ Manual trigger for testing anytime
 
 ## Project Structure
 
@@ -109,60 +133,23 @@ Automation project for MeroShare website (https://meroshare.cdsc.com.np) using P
 │           ├── asba.js         # ASBA page helpers
 │           ├── ipo.js          # IPO application helpers
 │           └── telegram.js    # Telegram notification helpers
-├── scripts/
-│   └── scheduler.js           # Daily scheduler script
+├── .github/
+│   └── workflows/
+│       └── meroshare-automation.yml  # GitHub Actions automation workflow
 ├── playwright.config.js        # Playwright configuration
 ├── .env                        # Environment variables
 └── package.json                # Project dependencies
 ```
 
-## Helper Functions
-
-Helper functions are organized by feature in `tests/meroshare/helpers/`:
-
-**Common Utilities** (`helpers/common.js`):
-- `waitForPageReady(page, selectors, timeout)` - Waits for page elements (reliable alternative to networkidle)
-- `isLoginSuccessful(page)` - Checks if login was successful
-
-**Login Helpers** (`helpers/login.js`):
-- `selectDP(page, dpName)` - Selects a Depository Participant from the dropdown
-- `fillLoginForm(page, { username, password })` - Fills the login form
-- `clickLoginButton(page)` - Clicks the login button
-- `performLogin(page, { username, password, dp })` - Complete login flow
-
-**Navigation Helpers** (`helpers/navigation.js`):
-- `clickMyASBA(page)` - Clicks on "My ASBA" link after login
-
-**ASBA Helpers** (`helpers/asba.js`):
-- `checkForApplyButton(page)` - Checks if Apply button exists on My ASBA page
-- `getIPODetails(page)` - Extracts IPO details from ASBA page
-- `clickApplyButton(page, applyInfo)` - Clicks the Apply button
-
-**IPO Helpers** (`helpers/ipo.js`):
-- `fillIPOApplication(page, applicationData)` - Fills IPO application form
-- `submitIPOApplication(page)` - Submits the IPO application
-- `checkApplicationStatus(page)` - Checks if application was successful
-
-**Telegram Helpers** (`helpers/telegram.js`):
-- `initBot(token)` - Initializes Telegram bot
-- `notifyIPOAvailable(chatId, ipoName)` - Sends IPO availability notification
-- `notifyIPOStatus(chatId, status, details)` - Sends application status notification
-- `notifyError(chatId, error)` - Sends error notification
-- `notifyDailyCheck(chatId, applyFound)` - Sends daily check notification
-
-All helpers are exported through `helpers/index.js` for easy importing.
-
 ## Features
 
-- ✅ Automated login with credentials from `.env` file
-- ✅ Select2 dropdown handling for DP selection
 - ✅ Element-based waits (more reliable than networkidle)
 - ✅ Graceful timeout handling with fallback strategies
-- ✅ Navigation to My ASBA page after login
 - ✅ **Telegram notifications** for IPO availability and application status
 - ✅ **Daily automated checks** for IPO availability
-- ✅ WIP: **Automatic IPO application** when Apply button is found
-- ✅ **Scheduled execution** using cron jobs
+- ✅ **Scheduled execution** using cron jobs (local) or GitHub Actions (cloud)
+- ✅ **GitHub Actions integration** for cloud-based automation
+- ✅ **Automatic IPO application** when Apply button is found (WIP)
 
 ## Configuration
 
