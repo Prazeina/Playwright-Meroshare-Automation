@@ -20,9 +20,7 @@ async function checkForApplyButton(page) {
       '[class*="asba" i]',
       '.company-list'
     ], 10000);
-  } catch (e) {
-    // Page not fully loaded, continuing
-  }
+  } catch (e) {}
   
   try {
     const pageContent = await page.textContent('body');
@@ -31,9 +29,7 @@ async function checkForApplyButton(page) {
         return { found: false, reason: 'No Record(s) Found' };
       }
     }
-  } catch (e) {
-    // Could not check page content for "No Record"
-  }
+  } catch (e) {}
   
   try {
     const noRecordSelectors = [
@@ -52,13 +48,9 @@ async function checkForApplyButton(page) {
         continue;
       }
     }
-  } catch (e) {
-    // Continue to check for Apply button
-  }
+  } catch (e) {}
   
-  // Check if there are Ordinary Shares on the page
   try {
-    // Look for all company-list divs (each IPO is in a company-list div)
     const companyRows = await page.locator('div.company-list').all();
     
     for (const row of companyRows) {

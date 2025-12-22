@@ -93,9 +93,7 @@ async function selectBank(page, bankName) {
               continue;
             }
           }
-        } catch (e) {
-          // Continue to try other methods
-        }
+        } catch (e) {}
         
         if (bankSelected) break;
         
@@ -186,9 +184,7 @@ async function selectBank(page, bankName) {
           }
         }
       }
-    } catch (e) {
-      // Continue
-    }
+    } catch (e) {}
   }
   
   return bankSelected;
@@ -262,9 +258,7 @@ async function selectAccountNumber(page, accountNumber) {
               continue;
             }
           }
-        } catch (e) {
-          // Continue to try native select
-        }
+        } catch (e) {}
         
         if (accountSelected) break;
       }
@@ -331,9 +325,7 @@ async function fillIPOApplication(page, applicationData = {}) {
       'input[placeholder*="kitta" i]',
       'input[placeholder*="CRN" i]'
     ], 10000);
-  } catch (e) {
-    // Form not found, continuing
-  }
+  } catch (e) {}
   
   if (bank) {
     await selectBank(page, bank);
@@ -347,9 +339,7 @@ async function fillIPOApplication(page, applicationData = {}) {
           'span.select2-container',
           'select'
         ], 5000);
-      } catch (e) {
-        // Account dropdown might not be available yet
-      }
+      } catch (e) {}
     }
   }
   
@@ -439,9 +429,7 @@ async function fillIPOApplication(page, applicationData = {}) {
       }
       await page.waitForTimeout(500);
     }
-  } catch (e) {
-    // Checkbox not found with this approach, continue
-  }
+  } catch (e) {}
   
   await page.waitForTimeout(1000);
   
@@ -456,7 +444,6 @@ async function fillIPOApplication(page, applicationData = {}) {
 async function submitIPOApplication(page) {
   await page.waitForTimeout(1000);
   
-  // Step 1: Click Proceed button to go to PIN screen
   const proceedSelectors = [
     'button:has-text("Proceed")',
     'button[type="submit"]:has-text("Proceed")',
@@ -488,7 +475,6 @@ async function submitIPOApplication(page) {
     return false;
   }
   
-  // Step 2: Enter transaction PIN
   const txnPin = process.env.MEROSHARE_TXN_PIN;
   if (!txnPin) {
     return false;
@@ -524,7 +510,6 @@ async function submitIPOApplication(page) {
     return false;
   }
   
-  // Step 3: Click Apply button to finalize
   const applySelectors = [
     'button:has-text("Apply")',
     'button.btn-primary:has-text("Apply")',

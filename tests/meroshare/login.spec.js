@@ -50,16 +50,12 @@ test.describe('MeroShare IPO Automation', () => {
     if (telegramToken) {
       try {
         initBot(telegramToken);
-      } catch (error) {
-        // Continue without Telegram notifications
-      }
+      } catch (error) {}
     }
     
     try {
       await page.waitForSelector('form, input#username, select2#selectBranch', { timeout: 15000 });
-    } catch (e) {
-      // Form not found, continuing anyway
-    }
+    } catch (e) {}
     await page.waitForTimeout(1000);
     
     try {
@@ -80,9 +76,7 @@ test.describe('MeroShare IPO Automation', () => {
           await page.locator('input[name*="username" i], input[id*="username" i]').evaluate(el => el.value = '');
           await page.waitForTimeout(500);
           await page.screenshot({ path: 'test-results/login-failure.png', fullPage: true });
-        } catch (e) {
-          // Screenshot failed or fields not found, continue
-        }
+        } catch (e) {}
         
         throw new Error(errorMessage);
       }
@@ -99,7 +93,6 @@ test.describe('MeroShare IPO Automation', () => {
         return;
       }
       
-      // Step 1: Click on the share row to view details
       const clickedRow = await clickShareRow(page, applyInfo);
       if (!clickedRow) {
         if (telegramChatId && telegramToken) {
@@ -108,11 +101,9 @@ test.describe('MeroShare IPO Automation', () => {
         return;
       }
       
-      // Step 2: Verify Share Value Per Unit = 100 and MinUnit = 10
       const verification = await verifyShareDetails(page, 100, 10);
       
       if (!verification.valid) {
-        // Send IPO Open notification with details for manual review
         if (telegramChatId && telegramToken) {
           await notifyIPOOpenForReview(telegramChatId, {
             companyName: applyInfo.ipoDetails?.companyName,
@@ -124,11 +115,9 @@ test.describe('MeroShare IPO Automation', () => {
         return;
       }
       
-      // Step 3: Go back to My ASBA
       await goBackToMyASBA(page);
       await page.waitForTimeout(2000);
       
-      // Step 4: Find the Apply button again
       const applyInfoRefresh = await checkForApplyButton(page);
       if (!applyInfoRefresh.found) {
         if (telegramChatId && telegramToken) {
@@ -137,7 +126,6 @@ test.describe('MeroShare IPO Automation', () => {
         return;
       }
       
-      // Send Telegram notification
       if (telegramChatId && telegramToken) {
         await notifyIPOAvailable(telegramChatId, applyInfoRefresh.ipoDetails);
       }
@@ -172,7 +160,6 @@ test.describe('MeroShare IPO Automation', () => {
       
     } catch (error) {
       if (telegramChatId && telegramToken) {
-        // Catch page closed errors
         if (error.message && error.message.includes('Target page, context or browser has been closed')) {
           await notifyIPOStatus(telegramChatId, 'unknown', 'Page closed unexpectedly during automation. IPO may or may not have been submitted.');
         } else {

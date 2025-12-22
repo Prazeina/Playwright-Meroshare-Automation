@@ -112,10 +112,8 @@ async function isLoginSuccessful(page) {
       await page.locator('input[type="password"], input[name*="password" i]').evaluate(el => el.value = '').catch(() => {});
       await page.locator('input[name*="username" i], input[id*="username" i]').evaluate(el => el.value = '').catch(() => {});
       await page.waitForTimeout(500);
-      await page.screenshot({ path: 'test-results/login-failed-debug.png', fullPage: true });
-    } catch (e) {
-      // Screenshot failed, continue
-    }
+      await page.screenshot({ path: 'test-results/page-error.png', fullPage: true });
+    } catch (e) {}
     return false;
   }
   

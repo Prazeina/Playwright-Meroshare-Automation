@@ -36,9 +36,7 @@ async function sendMessage(chatId, message, options = {}) {
   
   try {
     await bot.sendMessage(chatId, message, options);
-  } catch (error) {
-    // Telegram errors are non-blocking
-  }
+  } catch (error) {}
 }
 
 /**
