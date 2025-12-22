@@ -2,6 +2,10 @@
 
 Automated IPO application system for MeroShare (https://meroshare.cdsc.com.np) using Playwright.
 
+![Telegram Notification](screenshot/Telegram%20Notification.png)
+
+*Example of IPO notification received on Telegram with company details and verification status*
+
 ## 🎯 What It Does
 
 1. **Logs in** to MeroShare with your credentials
@@ -136,14 +140,6 @@ Add these secrets:
 - ✅ Telegram notifications
 - ✅ GitHub Actions scheduled automation
 - ✅ Element-based waits (reliable)
-
-## Screenshots
-
-### Telegram Notification
-![Telegram Notification](screenshots/Telegram%20Notification.png)
-
-*Example of IPO notification received on Telegram with company details and verification status*
-
 ## Resources
 
 - [Playwright Documentation](https://playwright.dev)
