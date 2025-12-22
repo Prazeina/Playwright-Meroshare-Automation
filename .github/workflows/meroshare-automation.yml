@@ -34,9 +34,12 @@ jobs:
           MEROSHARE_USERNAME: ${{ secrets.MEROSHARE_USERNAME }}
           MEROSHARE_PASSWORD: ${{ secrets.MEROSHARE_PASSWORD }}
           MEROSHARE_DP_NP: ${{ secrets.MEROSHARE_DP_NP }}
+          MEROSHARE_BANK: ${{ secrets.MEROSHARE_BANK }}
+          MEROSHARE_P_ACCOUNT_NO: ${{ secrets.MEROSHARE_P_ACCOUNT_NO }}
+          MEROSHARE_KITTA_N0: ${{ secrets.MEROSHARE_KITTA_N0 }}
+          MEROSHARE_CRN_NO: ${{ secrets.MEROSHARE_CRN_NO }}
+          MEROSHARE_TXN_PIN: ${{ secrets.MEROSHARE_TXN_PIN }}
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
-          IPO_QUANTITY: ${{ secrets.IPO_QUANTITY }}
-          IPO_PIN: ${{ secrets.IPO_PIN }}
         run: npm run automate
 
