@@ -7,6 +7,9 @@ const {
   checkForApplyButton,
   getIPODetails,
   clickApplyButton,
+  clickShareRow,
+  verifyShareDetails,
+  goBackToMyASBA,
   fillIPOApplication,
   submitIPOApplication,
   checkApplicationStatus,
@@ -15,6 +18,7 @@ const {
   notifyIPOStatus,
   notifyError,
   notifyIPONotFound,
+  notifyIPOOpenForReview,
 } = require('./helpers');
 
 test.describe('MeroShare IPO Automation', () => {
@@ -34,13 +38,10 @@ test.describe('MeroShare IPO Automation', () => {
     const dp = process.env.MEROSHARE_DP_NP;
     const telegramToken = process.env.TELEGRAM_BOT_TOKEN;
     const telegramChatId = process.env.TELEGRAM_CHAT_ID;
-    const ipoQuantityRaw = process.env.IPO_QUANTITY || '10';
-    const ipoQuantity = parseInt(ipoQuantityRaw, 10);
-    if (isNaN(ipoQuantity) || ipoQuantity < 1) {
-      throw new Error('IPO_QUANTITY must be a positive number');
-    }
-    const ipoCrn = process.env.IPO_CRN;
-    const ipoPin = process.env.IPO_PIN;
+    const ipoBank = process.env.MEROSHARE_BANK;
+    const ipoAccountNumber = process.env.MEROSHARE_P_ACCOUNT_NO;
+    const ipoKitta = process.env.MEROSHARE_KITTA_N0;
+    const ipoCrn = process.env.MEROSHARE_CRN_NO;
     
     if (!username || !password) {
       throw new Error('MEROSHARE_USERNAME and MEROSHARE_PASSWORD must be set in .env file');
@@ -49,16 +50,12 @@ test.describe('MeroShare IPO Automation', () => {
     if (telegramToken) {
       try {
         initBot(telegramToken);
-      } catch (error) {
-        // Continue without Telegram notifications
-      }
+      } catch (error) {}
     }
     
     try {
       await page.waitForSelector('form, input#username, select2#selectBranch', { timeout: 15000 });
-    } catch (e) {
-      // Form not found, continuing anyway
-    }
+    } catch (e) {}
     await page.waitForTimeout(1000);
     
     try {
@@ -79,9 +76,7 @@ test.describe('MeroShare IPO Automation', () => {
           await page.locator('input[name*="username" i], input[id*="username" i]').evaluate(el => el.value = '');
           await page.waitForTimeout(500);
           await page.screenshot({ path: 'test-results/login-failure.png', fullPage: true });
-        } catch (e) {
-          // Screenshot failed or fields not found, continue
-        }
+        } catch (e) {}
         
         throw new Error(errorMessage);
       }
@@ -97,16 +92,54 @@ test.describe('MeroShare IPO Automation', () => {
         }
         return;
       }
-      const ipoDetails = await getIPODetails(page);
+      
+      const clickedRow = await clickShareRow(page, applyInfo);
+      if (!clickedRow) {
+        if (telegramChatId && telegramToken) {
+          await notifyError(telegramChatId, 'Could not click on share row to view details');
+        }
+        return;
+      }
+      
+      const verification = await verifyShareDetails(page, 100, 10);
+      
+      if (!verification.valid) {
+        if (telegramChatId && telegramToken) {
+          await notifyIPOOpenForReview(telegramChatId, {
+            companyName: applyInfo.ipoDetails?.companyName,
+            shareValuePerUnit: verification.shareValuePerUnit,
+            minUnit: verification.minUnit,
+            reason: verification.reason
+          });
+        }
+        return;
+      }
+      
+      await goBackToMyASBA(page);
+      await page.waitForTimeout(2000);
+      
+      const applyInfoRefresh = await checkForApplyButton(page);
+      if (!applyInfoRefresh.found) {
+        if (telegramChatId && telegramToken) {
+          await notifyError(telegramChatId, 'Could not find Apply button after verification');
+        }
+        return;
+      }
+      
       if (telegramChatId && telegramToken) {
-        await notifyIPOAvailable(telegramChatId, ipoDetails.name || 'Unknown IPO');
+        await notifyIPOAvailable(telegramChatId, applyInfoRefresh.ipoDetails);
       }
 
-      if (ipoCrn && ipoPin) {
-        await clickApplyButton(page, applyInfo);
+      if (ipoBank && ipoAccountNumber && ipoKitta && ipoCrn) {
+        await clickApplyButton(page, applyInfoRefresh);
         await page.waitForTimeout(3000);
 
-        await fillIPOApplication(page, { quantity: ipoQuantity, crn: ipoCrn, pin: ipoPin });
+        await fillIPOApplication(page, {
+          bank: ipoBank,
+          accountNumber: ipoAccountNumber,
+          kitta: ipoKitta,
+          crn: ipoCrn
+        });
         await page.waitForTimeout(2000);
 
         const submitted = await submitIPOApplication(page);
@@ -127,7 +160,11 @@ test.describe('MeroShare IPO Automation', () => {
       
     } catch (error) {
       if (telegramChatId && telegramToken) {
-        await notifyError(telegramChatId, error.message);
+        if (error.message && error.message.includes('Target page, context or browser has been closed')) {
+          await notifyIPOStatus(telegramChatId, 'unknown', 'Page closed unexpectedly during automation. IPO may or may not have been submitted.');
+        } else {
+          await notifyError(telegramChatId, error.message);
+        }
       }
       throw error;
     }

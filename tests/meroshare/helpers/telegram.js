@@ -36,18 +36,34 @@ async function sendMessage(chatId, message, options = {}) {
   
   try {
     await bot.sendMessage(chatId, message, options);
-  } catch (error) {
-    // Telegram errors are non-blocking
-  }
+  } catch (error) {}
 }
 
 /**
  * Send notification about IPO availability
  * @param {string} chatId - Telegram chat ID
- * @param {string} ipoName - Name of the IPO
+ * @param {object} ipoDetails - IPO details object with companyName, subGroup, shareType, shareGroup
  */
-async function notifyIPOAvailable(chatId, ipoName) {
-  const message = `🚀 *IPO Open 🤩*`;
+async function notifyIPOAvailable(chatId, ipoDetails) {
+  let message = '🚀 *IPO Open 🤩*\n\n';
+  
+  if (ipoDetails && typeof ipoDetails === 'object') {
+    if (ipoDetails.companyName) {
+      message += `*Company:* ${ipoDetails.companyName}\n`;
+    }
+    if (ipoDetails.subGroup) {
+      message += `*Sub Group:* ${ipoDetails.subGroup}\n`;
+    }
+    if (ipoDetails.shareType) {
+      message += `*Share Type:* ${ipoDetails.shareType}\n`;
+    }
+    if (ipoDetails.shareGroup) {
+      message += `*Share Group:* ${ipoDetails.shareGroup}\n`;
+    }
+    message += `\nTime: ${new Date().toLocaleString()}`;
+  } else {
+    message += `Time: ${new Date().toLocaleString()}`;
+  }
   
   await sendMessage(chatId, message, { parse_mode: 'Markdown' });
 }
@@ -103,6 +119,38 @@ async function notifyIPONotFound(chatId) {
   await sendMessage(chatId, message, { parse_mode: 'Markdown' });
 }
 
+/**
+ * Send notification about IPO open with share details (for manual review)
+ * @param {string} chatId - Telegram chat ID
+ * @param {object} details - IPO details
+ * @param {string} details.companyName - Company name
+ * @param {number} details.shareValuePerUnit - Share Value Per Unit
+ * @param {number} details.minUnit - MinUnit
+ * @param {string} details.reason - Reason for not auto-applying
+ */
+async function notifyIPOOpenForReview(chatId, details) {
+  let message = '🚀 *IPO Open* ℹ️\n\n';
+  
+  if (details.companyName) {
+    message += `*Company:* ${details.companyName}\n`;
+  }
+  if (details.shareValuePerUnit !== undefined && details.shareValuePerUnit !== null) {
+    message += `*Share Value Per Unit:* ${details.shareValuePerUnit}\n`;
+  }
+  if (details.minUnit !== undefined && details.minUnit !== null) {
+    message += `*Min Unit:* ${details.minUnit}\n`;
+  }
+  
+  message += `\n⚠️ *Not auto-applied*\n`;
+  if (details.reason) {
+    message += `_${details.reason}_\n`;
+  }
+  
+  message += `\nTime: ${new Date().toLocaleString()}`;
+  
+  await sendMessage(chatId, message, { parse_mode: 'Markdown' });
+}
+
 module.exports = {
   initBot,
   sendMessage,
@@ -111,5 +159,5 @@ module.exports = {
   notifyError,
   notifyDailyCheck,
   notifyIPONotFound,
+  notifyIPOOpenForReview,
 };
-
