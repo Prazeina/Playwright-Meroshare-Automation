@@ -11,7 +11,6 @@ on:
 jobs:
   automate:
     runs-on: ubuntu-latest
-    environment: production  # Requires approval
     
     steps:
       - name: Checkout code
